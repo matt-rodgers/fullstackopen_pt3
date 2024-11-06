@@ -30,6 +30,16 @@ app.get('/api/persons', (request, response) => {
     response.json(persons)
 })
 
+app.get('/api/persons/:id', (request, response) => {
+    const id = request.params.id
+    const person = persons.find(p => p.id === id)
+    if (person) {
+        response.json(person)
+    } else {
+        response.status(404).end()
+    }
+})
+
 app.get('/info', (request, response) => {
     const currentTimestamp = new Date().toString()
     const infoPage = `<!DOCTYPE html>
