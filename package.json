@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "build:ui": "rm -r dist && cd ../fullstackopen/part2/phonebook && npm run build && cp -r dist ../../../fullstackopen_pt3",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Matt Rodgers",
