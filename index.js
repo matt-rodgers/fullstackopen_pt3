@@ -23,29 +23,6 @@ morgan.token('body' ,(req, res) => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
-
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(res => {
     response.json(res)
@@ -69,13 +46,15 @@ app.get('/api/persons/:id', (request, response) => {
 
 app.delete('/api/persons/:id', (request, response) => {
   const id = request.params.id
-  persons = persons.filter(p => p.id !== id)
-  response.status(204).end()
+  Person.findByIdAndDelete(id).then(res => {
+    console.log(`Deleted ${id}`)
+    response.status(204).end()
+  })
+  .catch((e) => {
+    console.log(`Error looking up ${id}: ${e}`)
+    response.status(400).end() // Placeholder, 400 might not be right in all cases
+  })
 })
-
-const personExists = (name) => {
-  return persons.some(p => p.name === name)
-}
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
@@ -84,35 +63,37 @@ app.post('/api/persons', (request, response) => {
     return response.status(400).json({error: "name missing"})
   } else if (!body.number) {
     return response.status(400).json({error: "number missing"})
-  } else if (personExists(body.name)) {
-    return response.status(400).json({error: "name already exists"})
   }
 
-  const person = {
+  const newPerson = new Person({
     name: body.name.toString(),
     number: body.number.toString(),
-    id: Math.floor(Math.random() * 4294967295) // max uint32
-  }
+  })
+  console.log(`Adding person ${newPerson} to database`)
 
-  persons = persons.concat(person)
-  response.json(person)
+  newPerson.save().then(res => {
+    console.log("person saved")
+    response.json(newPerson)
+  })
 })
 
 app.get('/info', (request, response) => {
   const currentTimestamp = new Date().toString()
-  const infoPage = `<!DOCTYPE html>
-<html lang="en">
-  <head>
+  Person.countDocuments({}).then(count => {
+    const infoPage = `<!DOCTYPE html>
+    <html lang="en">
+    <head>
     <meta charset="utf-8">
     <title>Phonebook info</title>
-  </head>
-  <body>
-    <p>Phonebook has info for ${persons.length} people</p>
+    </head>
+    <body>
+    <p>Phonebook has info for ${count} people</p>
     <p>${currentTimestamp}</p>
-  </body>
-</html>
-`
-  response.send(infoPage)
+    </body>
+    </html>
+    `
+    response.send(infoPage)
+  })
 })
 
 const PORT = process.env.PORT
