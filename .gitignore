@@ -1,4 +1,4 @@
 node_modules
 
-# Environment variables to source
-env.sh
+# Environment variables
+.env
