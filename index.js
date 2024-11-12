@@ -23,13 +23,14 @@ morgan.token('body' ,(req, res) => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   Person.find({}).then(res => {
     response.json(res)
   })
+  .catch(e => next(e))
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   const id = request.params.id
   Person.findById(id).then(res => {
     if (res) {
@@ -38,25 +39,19 @@ app.get('/api/persons/:id', (request, response) => {
       response.status(404).end()
     }
   })
-  .catch((e) => {
-    console.log(`Error looking up ${id}: ${e}`)
-    response.status(400).end() // Placeholder, 400 might not be right in all cases
-  })
+  .catch(e => next(e))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   const id = request.params.id
   Person.findByIdAndDelete(id).then(res => {
     console.log(`Deleted ${id}`)
     response.status(204).end()
   })
-  .catch((e) => {
-    console.log(`Error looking up ${id}: ${e}`)
-    response.status(400).end() // Placeholder, 400 might not be right in all cases
-  })
+  .catch(e => next(e))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (!body.name) {
@@ -69,15 +64,17 @@ app.post('/api/persons', (request, response) => {
     name: body.name.toString(),
     number: body.number.toString(),
   })
+
   console.log(`Adding person ${newPerson} to database`)
 
   newPerson.save().then(res => {
     console.log("person saved")
     response.json(newPerson)
   })
+  .catch(e => next(e))
 })
 
-app.get('/info', (request, response) => {
+app.get('/info', (request, response, next) => {
   const currentTimestamp = new Date().toString()
   Person.countDocuments({}).then(count => {
     const infoPage = `<!DOCTYPE html>
@@ -94,7 +91,21 @@ app.get('/info', (request, response) => {
     `
     response.send(infoPage)
   })
+  .catch(e => next(e))
 })
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'Malformatted ID' })
+  }
+
+  next(error)
+}
+
+// Must be last loaded middleware
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
