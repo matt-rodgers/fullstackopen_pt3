@@ -74,6 +74,29 @@ app.post('/api/persons', (request, response, next) => {
   .catch(e => next(e))
 })
 
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  if (!body.name) {
+    return response.status(400).json({error: "name missing"})
+  } else if (!body.number) {
+    return response.status(400).json({error: "number missing"})
+  }
+
+  const newPerson = {
+    name: body.name.toString(),
+    number: body.number.toString(),
+  }
+
+  console.log(`Updating ${newPerson.name}`)
+
+  Person.findByIdAndUpdate(request.params.id, newPerson, { new: true })
+    .then(updatedPerson => {
+      response.json(updatedPerson)
+    })
+    .catch(e => next(e))
+})
+
 app.get('/info', (request, response, next) => {
   const currentTimestamp = new Date().toString()
   Person.countDocuments({}).then(count => {
