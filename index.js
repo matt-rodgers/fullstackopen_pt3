@@ -13,21 +13,21 @@ app.use(cors())
 app.use(express.json())
 
 /* Logging using morgan */
-morgan.token('body' ,(req, res) => {
+morgan.token('body' ,(req, _res) => {
   if (req.method === 'POST') {
     return JSON.stringify(req.body)
   } else {
-    return " "
+    return ' '
   }
-});
+})
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
-app.get('/api/persons', (request, response, next) => {
+app.get('/api/persons', (_request, response, next) => {
   Person.find({}).then(res => {
     response.json(res)
   })
-  .catch(e => next(e))
+    .catch(e => next(e))
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -39,25 +39,25 @@ app.get('/api/persons/:id', (request, response, next) => {
       response.status(404).end()
     }
   })
-  .catch(e => next(e))
+    .catch(e => next(e))
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
   const id = request.params.id
-  Person.findByIdAndDelete(id).then(res => {
+  Person.findByIdAndDelete(id).then(_res => {
     console.log(`Deleted ${id}`)
     response.status(204).end()
   })
-  .catch(e => next(e))
+    .catch(e => next(e))
 })
 
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (!body.name) {
-    return response.status(400).json({error: "name missing"})
+    return response.status(400).json({ error: 'name missing' })
   } else if (!body.number) {
-    return response.status(400).json({error: "number missing"})
+    return response.status(400).json({ error: 'number missing' })
   }
 
   const newPerson = new Person({
@@ -67,20 +67,20 @@ app.post('/api/persons', (request, response, next) => {
 
   console.log(`Adding person ${newPerson} to database`)
 
-  newPerson.save().then(res => {
-    console.log("person saved")
+  newPerson.save().then(_res => {
+    console.log('person saved')
     response.json(newPerson)
   })
-  .catch(e => next(e))
+    .catch(e => next(e))
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
   const body = request.body
 
   if (!body.name) {
-    return response.status(400).json({error: "name missing"})
+    return response.status(400).json({ error: 'name missing' })
   } else if (!body.number) {
-    return response.status(400).json({error: "number missing"})
+    return response.status(400).json({ error: 'number missing' })
   }
 
   const newPerson = {
@@ -118,7 +118,7 @@ app.get('/info', (request, response, next) => {
     `
     response.send(infoPage)
   })
-  .catch(e => next(e))
+    .catch(e => next(e))
 })
 
 const errorHandler = (error, request, response, next) => {
